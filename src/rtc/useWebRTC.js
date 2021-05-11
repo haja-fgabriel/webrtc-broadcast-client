@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { RTCForwardingPeer } from './core/RTCForwardingPeer'
+import { RTCForwardingPeer, RTCForwardingPeerConfiguration } from './core/RTCForwardingPeer'
 
 const log = (text) => console.log('useWebRTC ' + text)
 
 /**
  * A hook that wraps a RTCForwardingPeer instance into an easy to use interface.
  *
- * @param {} props
+ * @param {RTCForwardingPeerConfiguration} props
  * @returns {}
  */
 export function useWebRTC (props) {
