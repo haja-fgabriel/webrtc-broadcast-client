@@ -1,10 +1,17 @@
-import React, { useContext } from 'react'
+import React, { useState, useContext } from 'react'
 import { VideoContext } from './VideoProvider'
 
 export const BroadcastStartButton = () => {
-  const { fetchVideo } = useContext(VideoContext)
+  const { fetchVideo, broadcaster, hasVideo } = useContext(VideoContext)
+  const [roomName, setRoomName] = useState('')
 
   return (
-    <button onClick={fetchVideo}>Push me</button>
+    <div>
+      {hasVideo && ((broadcaster && <p>You are a broadcaster.</p>) ||
+        <p>You are a viewer.</p>)
+      }
+      <input type="text" onChange={(e) => setRoomName(e.target.value)}></input>
+      <button onClick={() => fetchVideo(roomName)}>Push me</button>
+    </div>
   )
 }
