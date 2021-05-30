@@ -8,7 +8,8 @@ const initialVideoState = {
   hasVideo: false,
   videoStream: undefined,
   broadcaster: false,
-  fetchVideo: undefined
+  fetchVideo: undefined,
+  room: undefined
 }
 
 const constraints = {
@@ -20,10 +21,10 @@ const log = (text) => console.log('VideoProvider ' + text)
 
 export const VideoContext = React.createContext(initialVideoState)
 
-const reducer = (state, { type, stream }) => {
+const reducer = (state, { type, room, stream }) => {
   switch (type) {
     case 'fetchingVideo':
-      return { ...state, pendingFetch: true }
+      return { ...state, pendingFetch: true, room }
     case 'fetchingError':
       return { ...state, pendingFetch: false, hasVideo: false, videoStream: undefined }
     case 'joinedAsViewer':
@@ -38,11 +39,11 @@ const reducer = (state, { type, stream }) => {
 // eslint-disable-next-line react/prop-types
 export const VideoProvider = ({ connectionProps, children }) => {
   const [state, dispatch] = useReducer(reducer, initialVideoState)
-  const { pendingFetch, hasVideo, videoStream, broadcaster } = state
+  const { pendingFetch, hasVideo, videoStream, broadcaster, room } = state
   const { connectionState, as, inRoom, joinRoom } = useWebRTC(connectionProps)
 
   const fetchVideo = useCallback(fetchVideoCallback, [])
-  const value = { connectionState, inRoom, pendingFetch, hasVideo, videoStream, fetchVideo, broadcaster }
+  const value = { connectionState, inRoom, pendingFetch, hasVideo, videoStream, fetchVideo, broadcaster, room }
 
   useEffect(fetchVideoEffect, [pendingFetch])
   useEffect(joinedEffect, [as])
@@ -55,9 +56,9 @@ export const VideoProvider = ({ connectionProps, children }) => {
     </VideoContext.Provider>
   )
 
-  function fetchVideoCallback () {
+  function fetchVideoCallback (room) {
     log('fetchVideo')
-    dispatch({ type: 'fetchingVideo' })
+    dispatch({ type: 'fetchingVideo', room })
   }
 
   function joinedEffect () {
@@ -82,7 +83,7 @@ export const VideoProvider = ({ connectionProps, children }) => {
     log('fetchVideoEffect')
     if (pendingFetch) {
       // TODO initiate WebRTC streaming
-      joinRoom('default-room')
+      joinRoom(room)
     }
   }
 }
