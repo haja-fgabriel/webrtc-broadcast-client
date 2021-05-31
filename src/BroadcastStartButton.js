@@ -24,17 +24,14 @@ export const BroadcastStartButton = () => {
         <select onChange={e => setCurrentCamera(e.target.value)}>
           {cameras.map(
             (cam, index) =>
-              <option key={cam.deviceId} value={index}>
-                {cam.label}
-              </option>)}
+              <option key={cam.deviceId} value={index}> {cam.label} </option>)}
         </select>
+
         <p>Choose an audio input source:</p>
         <select onChange={e => setCurrentMicrophone(e.target.value)}>
           {microphones.map(
             (mic, index) =>
-              <option key={mic.deviceId} value={index}>
-                {mic.label}
-              </option>)}
+              <option key={mic.deviceId} value={index}> {mic.label} </option>)}
         </select>
       </div>}
       <input type="text" onChange={(e) => setRoomName(e.target.value)}></input>
