@@ -14,8 +14,10 @@ export function useWebRTC (props) {
   const joinRoom = useCallback(joinRoomCallback, [peer])
   const addStream = useCallback(addStreamCallback, [peer])
   const [connectionState, setConnectionState] = useState(peer.connectionState)
-  const [as, setAs] = useState(undefined)
-  const [inRoom, setInRoom] = useState(undefined)
+  const [as, setAs] = useState()
+  const [inRoom, setInRoom] = useState()
+  const setOnParentOffer = useCallback(f => { peer.onParentOffer = f }, [])
+  const setOnTrack = useCallback(f => { peer.onTrack = f }, [])
 
   useEffect(() => {
     log('useEffect')
@@ -40,7 +42,9 @@ export function useWebRTC (props) {
     inRoom,
     stream: peer.stream,
     joinRoom,
-    addStream
+    addStream,
+    setOnParentOffer,
+    setOnTrack
   }
 
   async function joinRoomCallback (room) {
