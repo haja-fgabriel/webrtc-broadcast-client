@@ -1,11 +1,12 @@
 /**
  * Does a download speed test to provide performance metrics of the network.
  * It makes use of fakefilegenerator.com's API to download a random 10 MB
- * MP3 file.
- * @returns{*}
+ * MP3 file. Because modern browsers are our enemies, we must use a CORS proxy
+ * to accomplish this.
+ * @returns{Promise<number|Error>}
  */
 
-export async function getAverageDownloadSpeed () {
+export const getAverageDownloadSpeed = async () => new Promise((resolve, reject) => {
   const formData = new FormData()
   formData.append('filetype', 'mp3')
   formData.append('filename', 'test')
@@ -23,7 +24,20 @@ export async function getAverageDownloadSpeed () {
     previousDownloadedAmount = e.loaded
     previousTime = time
   }
-  request.open('POST', 'https://www.fakefilegenerator.com/download.php')
+  const ultimate = setTimeout(() => {
+    request.abort()
+    resolve(sum / count)
+  }, 4000)
+
+  request.open('POST', 'https://cors-anywhere.herokuapp.com/https://www.fakefilegenerator.com/download.php')
   request.send(formData)
-  return Promise.resolve(sum / count)
-}
+  request.onreadystatechange = function () {
+    if (request.readyState === 4) {
+      if (request.status && request.status !== 200) {
+        reject(new Error('Request to https://www.fakefilegenerator.com/download.php returned ' + request.status))
+      }
+      clearTimeout(ultimate)
+      resolve(sum / count)
+    }
+  }
+})
