@@ -71,7 +71,8 @@
     "workbox-webpack-plugin": "5.1.4"
   },
   "scripts": {
-    "start": "node scripts/start.js",
+    "start-local": "set LOCAL_ENV=true&&node scripts/start.js",
+    "start": "set HTTPS=true&&set SSL_CRT_FILE=.cert/cert.pem&&set SSL_KEY_FILE=.cert/privkey.pem&&node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },
@@ -94,14 +95,14 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/react-hooks": "^5.1.2",
-    "eslint": "^7.26.0",
-    "eslint-config-standard": "^16.0.2",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^24.3.6",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.3.1",
-    "eslint-plugin-react": "^7.23.2"
+    "@testing-library/react-hooks": "~5.1.2",
+    "eslint": "~7.26.0",
+    "eslint-config-standard": "~16.0.2",
+    "eslint-plugin-import": "~2.22.1",
+    "eslint-plugin-jest": "~24.3.6",
+    "eslint-plugin-node": "~11.1.0",
+    "eslint-plugin-promise": "~4.3.1",
+    "eslint-plugin-react": "~7.23.2"
   },
   "jest": {
     "roots": [
@@ -120,6 +121,9 @@
     ],
     "testMatch": [
       "<rootDir>/test/**/*.{js,jsx,ts,tsx}"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/mocks"
     ],
     "testEnvironment": "jsdom",
     "testRunner": "<rootDir>/node_modules/jest-circus/runner.js",
