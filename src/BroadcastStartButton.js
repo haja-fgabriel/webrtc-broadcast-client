@@ -34,8 +34,11 @@ export const BroadcastStartButton = () => {
               <option key={mic.deviceId} value={index}> {mic.label} </option>)}
         </select>
       </div>}
-      <input type="text" onChange={(e) => setRoomName(e.target.value)}></input>
-      <button onClick={() => fetchVideo(roomName)}>Join room</button>
+      {!inRoom &&
+      <div>
+        <input type="text" onChange={(e) => setRoomName(e.target.value)}></input>
+        <button onClick={() => fetchVideo(roomName)}>Join room</button>
+      </div>}
     </div>
   )
 

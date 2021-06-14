@@ -4,7 +4,7 @@ import { VideoContext } from './VideoProvider'
 const log = (text) => console.log('VideoBroadcastItem ' + text)
 
 export const VideoBroadcastItem = () => {
-  const { hasVideo, videoStream, inRoom, pendingSet } = useContext(VideoContext)
+  const { hasVideo, videoStream, inRoom, pendingSet, broadcaster } = useContext(VideoContext)
 
   const videoRef = createRef()
 
@@ -21,10 +21,15 @@ export const VideoBroadcastItem = () => {
       video.srcObject = undefined
     }
     if (hasVideo) {
+      log('setting video stream')
+      console.log(videoStream.getTracks())
       video.srcObject = videoStream
       video.onloadedmetadata = (e) => {
         log('onloadedmetadata')
         video.play()
+        if (broadcaster) {
+          video.muted = true
+        }
       }
     }
   }

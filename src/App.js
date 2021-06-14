@@ -4,6 +4,8 @@ import { VideoBroadcastItem } from './VideoBroadcastItem'
 import { BroadcastStartButton } from './BroadcastStartButton'
 
 const log = (text) => console.log('App ' + text)
+// const serverUrl = (process.env.LOCAL_ENV === 'true' && 'http://localhost:8000') || 'https://haja-fgabriel.freemyip.com:8000'
+const serverUrl = 'http://localhost:8000'
 
 function App () {
   useEffect(() => {
@@ -15,7 +17,7 @@ function App () {
   return (
     <div className="App">
       <header className="App-header">
-        <VideoProvider connectionProps={{ serverUrl: 'http://localhost:8000' }}>
+        <VideoProvider connectionProps={{ serverUrl }}>
           <VideoBroadcastItem />
           <BroadcastStartButton />
         </VideoProvider>
