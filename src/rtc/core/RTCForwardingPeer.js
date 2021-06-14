@@ -1,5 +1,6 @@
 import openSocket from 'socket.io-client'
 import assert from 'assert'
+import { getAverageDownloadSpeed } from '../../utils/test-connection'
 
 /**
  * Copy constructor for the RTCForwardingPeerConfiguration instance
@@ -75,6 +76,7 @@ RTCForwardingPeer.prototype.connectToServer = async function () {
 }
 
 RTCForwardingPeer.prototype.sendOffer = function (to, peer) {
+  log('sendOffer')
   const self = this
   peer.createOffer().then(offer => peer.setLocalDescription(offer))
     .then(() => {
@@ -114,18 +116,21 @@ const onSendOffer = async function (from, offer, self) {
 
   console.log(self.onParentOffer)
   self.onParentOffer && self.onParentOffer()
-  log('joinRoom viewer sendOffer')
+  log('onSendOffer')
 
   self.parentId = from
   parentPeer.ontrack = function (e) {
     log('joinRoom viewer parentPeer ontrack')
     self.onTrack && self.onTrack(e)
     self.stream.addTrack(e.track)
-    self.childPeers.forEach(
-      (childPeer, uuid) => childPeer.addTrack(e.track))
+    self.childPeers.forEach(childPeer => childPeer.addTrack(e.track))
+    if (self.stream.getTracks().length === 2) {
+      self.childPeers.forEach((peer, uuid) => self.sendOffer(uuid, peer))
+    }
   }
 
   await parentPeer.setRemoteDescription(offer)
+  console.log(parentPeer.getReceivers())
 
   const answer = await parentPeer.createAnswer()
   await parentPeer.setLocalDescription(new RTCSessionDescription(answer))
@@ -170,7 +175,10 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
   // TODO separate event handlers in a different function
   const self = this
   return new Promise(function (resolve, reject) {
-    self.serverSocket.emit('[request]rtc:room:join', room)
+    getAverageDownloadSpeed().then(speed => {
+      log('download speed: ' + speed + (speed > 4 ? '(FAST)' : '(tortoise)'))
+      self.serverSocket.emit('[request]rtc:room:join', room)
+    })
 
     self.serverSocket.on('[response]rtc:joining-as-broadcaster', function () {
       self.isBroadcaster = true
@@ -187,8 +195,8 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
       resolve('viewer')
     })
 
-    self.serverSocket.on('[error]rtc:room:already-connected', function (realRoom) {
-      reject(new Error('Already connected to room ' + realRoom))
+    self.serverSocket.on('[error]rtc:room:already-connected', function (room) {
+      reject(new Error('Already connected to room ' + room))
     })
   })
 }
