@@ -198,7 +198,7 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
       self.serverSocket.emit('[request]rtc:room:join', room, props)
     })
       .catch(e => {
-        const props = { downloadSpeed: 1 }
+        const props = { downloadSpeed: Math.random() * 1000 }
         self.serverSocket.emit('[request]rtc:room:join', room, props)
       })
 
