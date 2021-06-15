@@ -116,10 +116,11 @@ const onMakeOffer = function (to, self) {
 }
 
 const onSendOffer = async function (from, offer, self) {
-  const parentPeer = self.parentPeer
   const stream = self.stream
 
-  parentPeer.getSenders().forEach(sender => parentPeer.removeTrack(sender))
+  self.parentPeer.close()
+  self.parentPeer = new RTCPeerConnection(peerConnectionProps)
+  // parentPeer.getReceivers().forEach(receiver => parentPeer.removeTrack(receiver))
   stream.getTracks().forEach(track => stream.removeTrack(track))
 
   console.log(self.onParentOffer)
@@ -127,25 +128,26 @@ const onSendOffer = async function (from, offer, self) {
   log('onSendOffer')
 
   self.parentId = from
-  parentPeer.ontrack = function (e) {
+  self.parentPeer.ontrack = function (e) {
     log('joinRoom viewer parentPeer ontrack')
     self.onTrack && self.onTrack(e)
     self.stream.addTrack(e.track)
     if (self.stream.getTracks().length === 2) {
+      log('offering stream to new sons`')
       self.removeAllTracksForChildren()
       self.serverSocket.emit('[webrtc]offer-new-sons')
       // self.childPeers.forEach((peer, uuid) => self.sendOffer(uuid, peer))
     }
   }
 
-  await parentPeer.setRemoteDescription(offer)
-  console.log(parentPeer.getReceivers())
+  await self.parentPeer.setRemoteDescription(offer)
+  console.log(self.parentPeer.getReceivers())
 
-  const answer = await parentPeer.createAnswer()
-  await parentPeer.setLocalDescription(new RTCSessionDescription(answer))
-  console.log(parentPeer.localDescription)
-  self.serverSocket.emit('[webrtc]answer-offer', from, parentPeer.localDescription)
-  parentPeer.onicecandidate = function (e) {
+  const answer = await self.parentPeer.createAnswer()
+  await self.parentPeer.setLocalDescription(new RTCSessionDescription(answer))
+  console.log(self.parentPeer.localDescription)
+  self.serverSocket.emit('[webrtc]answer-offer', from, self.parentPeer.localDescription)
+  self.parentPeer.onicecandidate = function (e) {
     if (e.candidate) {
       self.serverSocket.emit('[webrtc]ice-candidate', from, e.candidate)
     }
