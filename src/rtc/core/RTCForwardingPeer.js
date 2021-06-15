@@ -169,6 +169,15 @@ RTCForwardingPeer.prototype.initializeEventHandlers = function () {
           self.parentPeer.addIceCandidate(iceCandidate)
         }
       })
+
+    self.serverSocket.on('[webrtc]remove-peer', function (who) {
+      const peer = self.childPeers.get(who)
+      if (!peer) {
+        return undefined
+      }
+      peer.getSenders().forEach(sender => peer.removeTrack(sender))
+      self.childPeers.delete(who)
+    })
     self.onConnectionStateChange && self.onConnectionStateChange()
   })
 }
@@ -188,6 +197,10 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
       const props = { downloadSpeed: speed }
       self.serverSocket.emit('[request]rtc:room:join', room, props)
     })
+      .catch(e => {
+        const props = { downloadSpeed: 1 }
+        self.serverSocket.emit('[request]rtc:room:join', room, props)
+      })
 
     self.serverSocket.on('[response]rtc:joining-as-broadcaster', function () {
       self.isBroadcaster = true
