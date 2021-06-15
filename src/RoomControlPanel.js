@@ -1,9 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { VideoContext } from './VideoProvider'
 
-const log = text => console.log('BroadcastStartButton ' + text)
+const log = text => console.log('RoomControlPanel ' + text)
 
-export const BroadcastStartButton = () => {
+export const RoomControlPanel = () => {
   const { fetchVideo, broadcaster, hasVideo, cameras, microphones, setCurrentCameraAndMicrophone, inRoom } = useContext(VideoContext)
   const [roomName, setRoomName] = useState('')
   const [currentCamera, setCurrentCamera] = useState(undefined)

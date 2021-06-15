@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { VideoProvider } from './VideoProvider'
 import { VideoBroadcastItem } from './VideoBroadcastItem'
-import { BroadcastStartButton } from './BroadcastStartButton'
+import { RoomControlPanel } from './RoomControlPanel'
 
 const log = (text) => console.log('App ' + text)
 // const serverUrl = (process.env.LOCAL_ENV === 'true' && 'http://localhost:8000') || 'https://haja-fgabriel.freemyip.com:8000'
@@ -20,7 +20,7 @@ function App () {
       </header>
       <VideoProvider connectionProps={{ serverUrl }}>
         <VideoBroadcastItem />
-        <BroadcastStartButton />
+        <RoomControlPanel />
       </VideoProvider>
     </div>
   )
