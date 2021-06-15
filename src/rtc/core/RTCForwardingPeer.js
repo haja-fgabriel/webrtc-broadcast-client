@@ -131,9 +131,10 @@ const onSendOffer = async function (from, offer, self) {
     log('joinRoom viewer parentPeer ontrack')
     self.onTrack && self.onTrack(e)
     self.stream.addTrack(e.track)
-    self.childPeers.forEach(childPeer => childPeer.addTrack(e.track))
     if (self.stream.getTracks().length === 2) {
-      self.childPeers.forEach((peer, uuid) => self.sendOffer(uuid, peer))
+      self.removeAllTracksForChildren()
+      self.serverSocket.emit('[webrtc]offer-new-sons')
+      // self.childPeers.forEach((peer, uuid) => self.sendOffer(uuid, peer))
     }
   }
 
@@ -223,7 +224,7 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
   })
 }
 
-RTCForwardingPeer.prototype.removeAllTracks = function () {
+RTCForwardingPeer.prototype.removeAllTracksForChildren = function () {
   this.childPeers.forEach(peer => {
     peer.getSenders().forEach(sender => peer.removeTrack(sender))
   })
@@ -260,7 +261,7 @@ RTCForwardingPeer.prototype.addStream = function (stream) {
     throw new Error('Streams can only be added for broadcasters.')
   }
   if (this.stream) {
-    this.removeAllTracks()
+    this.removeAllTracksForChildren()
   }
   this.stream = stream
   this.childPeers.forEach((peer, uuid) => {
