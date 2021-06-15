@@ -1,8 +1,9 @@
 /**
  * Does a download speed test to provide performance metrics of the network.
  * It makes use of fakefilegenerator.com's API to download a random 10 MB
- * MP3 file. Because modern browsers are our enemies, we must use a CORS proxy
- * to accomplish this.
+ * MP3 file. Because modern browsers are our enemies and because
+ * fakefilegenerator.com is not generous enough to let anyone use their API
+ * hassle-free, we must use a CORS proxy for this.
  * @returns{Promise<number|Error>}
  */
 

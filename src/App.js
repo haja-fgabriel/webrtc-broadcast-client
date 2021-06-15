@@ -17,11 +17,11 @@ function App () {
   return (
     <div className="App">
       <header className="App-header">
-        <VideoProvider connectionProps={{ serverUrl }}>
-          <VideoBroadcastItem />
-          <BroadcastStartButton />
-        </VideoProvider>
       </header>
+      <VideoProvider connectionProps={{ serverUrl }}>
+        <VideoBroadcastItem />
+        <BroadcastStartButton />
+      </VideoProvider>
     </div>
   )
 }

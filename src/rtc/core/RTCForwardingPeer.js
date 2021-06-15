@@ -75,6 +75,11 @@ RTCForwardingPeer.prototype.connectToServer = async function () {
   this.initializeEventHandlers()
 }
 
+/**
+ * Sends a new offer request to the given peer
+ * @param {string} to peer's UUID
+ * @param {RTCPeerConnection} peer peer's instance
+ */
 RTCForwardingPeer.prototype.sendOffer = function (to, peer) {
   log('sendOffer')
   const self = this
@@ -91,7 +96,7 @@ RTCForwardingPeer.prototype.sendOffer = function (to, peer) {
       self.serverSocket.on('[webrtc]answer-offer', function (from, sdp) {
         log('joinRoom broadcaster answerOffer')
         peer.setRemoteDescription(new RTCSessionDescription(sdp))
-          .then(() => self.childPeers.set(from, peer))
+          .then(() => {})
       })
     })
 }
@@ -99,7 +104,10 @@ RTCForwardingPeer.prototype.sendOffer = function (to, peer) {
 const onMakeOffer = function (to, self) {
   console.log('receives')
   self.onOfferForChild && self.onOfferForChild(to)
-  const peer = new RTCPeerConnection(peerConnectionProps)
+  if (!self.childPeers.has(to)) {
+    self.childPeers.set(to, new RTCPeerConnection(peerConnectionProps))
+  }
+  const peer = self.childPeers.get(to)
   self.stream.getTracks().forEach(track => {
     log('joinRoom broadcaster makeOffer stream addTrack')
     peer.addTrack(track)
@@ -177,7 +185,8 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
   return new Promise(function (resolve, reject) {
     getAverageDownloadSpeed().then(speed => {
       log('download speed: ' + speed + (speed > 4 ? '(FAST)' : '(tortoise)'))
-      self.serverSocket.emit('[request]rtc:room:join', room)
+      const props = { downloadSpeed: speed }
+      self.serverSocket.emit('[request]rtc:room:join', room, props)
     })
 
     self.serverSocket.on('[response]rtc:joining-as-broadcaster', function () {
