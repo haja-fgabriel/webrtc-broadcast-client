@@ -179,6 +179,7 @@ RTCForwardingPeer.prototype.initializeEventHandlers = function () {
         return undefined
       }
       peer.getSenders().forEach(sender => peer.removeTrack(sender))
+      peer.close()
       self.childPeers.delete(who)
     })
     self.onConnectionStateChange && self.onConnectionStateChange()
