@@ -36,7 +36,7 @@ export const RoomControlPanel = () => {
       </div>}
       {!inRoom &&
       <div>
-        <input type="text" onChange={(e) => setRoomName(e.target.value)}></input>
+        <input type="text" placeholder="Type a room to join in" onChange={(e) => setRoomName(e.target.value)}></input>
         <button onClick={() => fetchVideo(roomName)}>Join room</button>
       </div>}
     </div>
