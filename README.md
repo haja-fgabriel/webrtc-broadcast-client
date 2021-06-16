@@ -10,6 +10,7 @@ The project is ejected, so it takes advantage of customizing the Jest and ESLint
 -- ``cert.pem`` - the certificate
 -- ``chain.pem`` - the intermediate signing authority
 -- ``privkey.pem`` - the private key
+4. Modify the serverUrl variable in the App.js file correspondignly to the address of the server (localhost if testing locally)
 ## Usage
 - ``npm build`` - compiles the server to old-school JS
 - ``npm start`` - starts the server normally (on port 8000). The port can be modified using the PORT environment variable
