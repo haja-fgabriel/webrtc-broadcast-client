@@ -23,7 +23,12 @@ const peerConnectionProps = {
         'stun:stun4.l.google.com:19302'
       ]
     },
-    { urls: ['stun:stunserver.org:3478'] }
+    { urls: ['stun:stunserver.org:3478'] },
+    {
+      urls: ['turn:numb.viagenie.ca'],
+      credential: 'muazkh',
+      username: 'webrtc@live.com'
+    }
   ]
 }
 
