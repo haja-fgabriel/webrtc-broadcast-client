@@ -35,6 +35,12 @@ export function useWebRTC (props) {
     }
   }, [])
 
+  useEffect(() => {
+    if (connectionState === 'disconnected') {
+      setAs(undefined)
+    }
+  }, [connectionState])
+
   log('render')
   return {
     connectionState,

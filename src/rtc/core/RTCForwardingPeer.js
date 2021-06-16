@@ -178,6 +178,10 @@ RTCForwardingPeer.prototype.initializeEventHandlers = function () {
         }
       })
 
+    self.serverSocket.on('[webrtc]party-over', function () {
+      self.close()
+    })
+
     self.serverSocket.on('[webrtc]remove-peer', function (who) {
       const peer = self.childPeers.get(who)
       if (!peer) {
@@ -240,6 +244,8 @@ RTCForwardingPeer.prototype.removeAllTracksForChildren = function () {
 
 RTCForwardingPeer.prototype.close = function () {
   this.serverSocket.close()
+  this.parentPeer.close()
+  this.childPeers.forEach(peer => peer.close())
   if (this.onConnectionStateChange) {
     this.onConnectionStateChange()
   }

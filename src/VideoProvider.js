@@ -26,6 +26,8 @@ export const VideoContext = React.createContext(initialVideoState)
 
 const reducer = (state, { type, room, stream, cameras, microphones, currentCamera, currentMicrophone }) => {
   switch (type) {
+    case 'disconnected':
+      return { ...state, hasVideo: false, broadcaster: false, videoStream: undefined, pendingSet: false, inRoom: undefined }
     case 'fetchingCameras':
       return { ...state, pendingGetCameras: true }
     case 'fetchedCameras':
@@ -67,6 +69,7 @@ export const VideoProvider = ({ connectionProps, children }) => {
   useEffect(joinRoomEffect, [pendingJoin])
   useEffect(joinedEffect, [as])
   useEffect(hasVideoEffect, [hasVideo])
+  useEffect(isConnectedEffect, [connectionState])
 
   log('render')
 
@@ -111,6 +114,12 @@ export const VideoProvider = ({ connectionProps, children }) => {
     if (pendingJoin) {
       // TODO initiate WebRTC streaming
       joinRoom(room)
+    }
+  }
+
+  function isConnectedEffect () {
+    if (connectionState === 'disconnected') {
+      dispatch({ type: 'disconnected' })
     }
   }
 
