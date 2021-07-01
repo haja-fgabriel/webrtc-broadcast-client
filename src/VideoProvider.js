@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useReducer } from 'react'
 import { useWebRTC } from './rtc/useWebRTC'
+import { getAverageDownloadSpeed } from './utils/test-connection'
 
 const MediaDevices = navigator.mediaDevices
 
@@ -13,8 +14,10 @@ const initialVideoState = {
   broadcaster: false,
   fetchVideo: undefined,
   setCurrentCameraAndMicrophone: undefined,
+  settingCameraError: undefined,
   cameras: undefined,
   microphones: undefined,
+  connectionPerformanceProps: undefined,
   currentCamera: undefined,
   currentMicrophone: undefined,
   room: undefined
@@ -24,7 +27,7 @@ const log = (text) => console.log('VideoProvider ' + text)
 
 export const VideoContext = React.createContext(initialVideoState)
 
-const reducer = (state, { type, room, stream, cameras, microphones, currentCamera, currentMicrophone }) => {
+const reducer = (state, { type, room, stream, cameras, microphones, currentCamera, connectionPerformanceProps, currentMicrophone, error }) => {
   switch (type) {
     case 'disconnected':
       return { ...state, hasVideo: false, broadcaster: false, videoStream: undefined, pendingSet: false, inRoom: undefined }
@@ -33,18 +36,20 @@ const reducer = (state, { type, room, stream, cameras, microphones, currentCamer
     case 'fetchedCameras':
       return { ...state, cameras, microphones, pendingGetCameras: false }
     case 'settingCamera':
-      return { ...state, pendingSet: true, currentCamera, currentMicrophone }
+      return { ...state, pendingSet: true, currentCamera, currentMicrophone, settingCameraError: undefined }
     case 'settedCamera':
       return { ...state, pendingSet: false, videoStream: stream, hasVideo: true }
+    case 'settingCameraError':
+      return { ...state, pendingSet: false, videoStream: undefined, settingCameraError: error }
     case 'joiningRoom':
-      return { ...state, pendingJoin: true, room }
+      return { ...state, pendingJoin: true, room, connectionPerformanceProps }
     case 'newParentOffer':
       console.log('changing state to newParentOffer')
       return { ...state, hasVideo: false }
     case 'onTrack':
       return { ...state, hasVideo: true, videoStream: stream }
     case 'fetchingError':
-      return { ...state, pendingJoin: false, hasVideo: false, videoStream: undefined }
+      return { ...state, pendingJoin: false, hasVideo: false, videoStream: undefined, settingCameraError: error }
     case 'joinedAsViewer':
       return { ...state, pendingJoin: false, hasVideo: true, videoStream: stream, broadcaster: false }
     case 'joinedAsBroadcaster':
@@ -57,12 +62,12 @@ const reducer = (state, { type, room, stream, cameras, microphones, currentCamer
 // eslint-disable-next-line react/prop-types
 export const VideoProvider = ({ connectionProps, children }) => {
   const [state, dispatch] = useReducer(reducer, initialVideoState)
-  const { pendingJoin, pendingSet, pendingGetCameras, hasVideo, videoStream, broadcaster, room, cameras, microphones, currentCamera, currentMicrophone } = state
+  const { pendingJoin, pendingSet, settingCameraError, pendingGetCameras, hasVideo, videoStream, broadcaster, room, cameras, microphones, currentCamera, currentMicrophone, connectionPerformanceProps } = state
   const { connectionState, as, inRoom, joinRoom, addStream, stream: peerStream, setOnParentOffer, setOnTrack } = useWebRTC(connectionProps)
 
   const fetchVideo = useCallback(joinRoomCallback, [])
   const setCurrentCameraAndMicrophone = useCallback(setCurrentCameraAndMicrophoneCallback, [])
-  const value = { connectionState, inRoom, pendingJoin, pendingSet, pendingGetCameras, hasVideo, videoStream, fetchVideo, broadcaster, room, cameras, microphones, setCurrentCameraAndMicrophone }
+  const value = { connectionState, connectionPerformanceProps, inRoom, pendingJoin, pendingSet, pendingGetCameras, hasVideo, videoStream, fetchVideo, broadcaster, room, cameras, microphones, setCurrentCameraAndMicrophone, settingCameraError }
 
   useEffect(getCamerasEffect, [])
   useEffect(setCameraEffect, [pendingSet])
@@ -81,7 +86,11 @@ export const VideoProvider = ({ connectionProps, children }) => {
 
   function joinRoomCallback (room) {
     log('joinRoomCallback')
-    dispatch({ type: 'joiningRoom', room })
+    getAverageDownloadSpeed().then(downloadSpeed => {
+      log('download speed: ' + downloadSpeed + (downloadSpeed > 4 ? '(FAST)' : '(tortoise)'))
+      dispatch({ type: 'joiningRoom', room, connectionPerformanceProps: { downloadSpeed } })
+    })
+      .catch(e => dispatch({ type: 'joiningRoom', room, connectionPerformanceProps: { downloadSpeed: 1 } }))
   }
 
   function setCurrentCameraAndMicrophoneCallback (currentCamera, currentMicrophone) {
@@ -111,10 +120,7 @@ export const VideoProvider = ({ connectionProps, children }) => {
 
   function joinRoomEffect () {
     log('joinRoomEffect')
-    if (pendingJoin) {
-      // TODO initiate WebRTC streaming
-      joinRoom(room)
-    }
+    pendingJoin && joinRoom(room, connectionPerformanceProps)
   }
 
   function isConnectedEffect () {
@@ -133,6 +139,10 @@ export const VideoProvider = ({ connectionProps, children }) => {
           cameras: devices.filter(device => device.kind === 'videoinput'),
           microphones: devices.filter(device => device.kind === 'audioinput')
         })
+      })
+      .catch(error => {
+        dispatch({ type: 'settingCameraError', error })
+        log('Cannot fetch image from the camera. Make sure the camera is not used by another process.')
       })
   }
 
@@ -155,6 +165,11 @@ export const VideoProvider = ({ connectionProps, children }) => {
         .then((stream) => {
           addStream(stream)
           dispatch({ type: 'settedCamera', stream })
+        })
+        .catch(_ => {
+          const error = 'Cannot fetch image from the camera. Make sure it is not used by another process.'
+          dispatch({ type: 'settingCameraError', error })
+          log(error)
         })
     }
   }

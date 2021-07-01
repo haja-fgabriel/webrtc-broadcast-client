@@ -31,7 +31,6 @@ export function useWebRTC (props) {
       log('cleanup')
       peer.removeAllListeners()
       peer.close()
-      // TODO cleanup when uninstantiating WebRTC hook
     }
   }, [])
 
@@ -53,9 +52,9 @@ export function useWebRTC (props) {
     setOnTrack
   }
 
-  async function joinRoomCallback (room) {
+  async function joinRoomCallback (room, props) {
     log('joinRoomCallback')
-    peer.joinRoom(room).then(_as => {
+    peer.joinRoom(room, props).then(_as => {
       setAs(_as)
       setInRoom(room)
     })
