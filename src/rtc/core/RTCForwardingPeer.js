@@ -54,12 +54,7 @@ export function RTCForwardingPeer (configuration) {
   // TODO must implement default event handlers
   // Event handlers
   this.onConnectionStateChange = undefined
-
-  this.onParentStateChange = undefined
-
   this.onParentOffer = undefined
-
-  this.onChildStateChange = undefined
   this.onOfferForChild = undefined
 
   // Event handler for reception of new tracks from the parent peer
@@ -101,11 +96,17 @@ RTCForwardingPeer.prototype.sendOffer = function (to, peer) {
       self.serverSocket.on('[webrtc]answer-offer', function (from, sdp) {
         log('joinRoom broadcaster answerOffer')
         peer.setRemoteDescription(new RTCSessionDescription(sdp))
-          .then(() => {})
+          .then(_ => {})
+          .catch(_ => {})
       })
     })
 }
 
+/**
+ * Event handler for receiving a request to make an offer.
+ * @param {string} to
+ * @param {RTCForwardingPeer} self the 'this' reference is getting lost, so this
+ */
 const onMakeOffer = function (to, self) {
   console.log('receives')
   self.onOfferForChild && self.onOfferForChild(to)
@@ -120,12 +121,17 @@ const onMakeOffer = function (to, self) {
   self.sendOffer(to, peer)
 }
 
+/**
+ * Event handler for receiving an offer request from another peer.
+ * @param {string} from
+ * @param {RTCSessionDescription} offer
+ * @param {RTCForwardingPeer} self
+ */
 const onSendOffer = async function (from, offer, self) {
   const stream = self.stream
 
   self.parentPeer.close()
   self.parentPeer = new RTCPeerConnection(peerConnectionProps)
-  // parentPeer.getReceivers().forEach(receiver => parentPeer.removeTrack(receiver))
   stream.getTracks().forEach(track => stream.removeTrack(track))
 
   console.log(self.onParentOffer)
@@ -141,7 +147,6 @@ const onSendOffer = async function (from, offer, self) {
       log('offering stream to new sons`')
       self.removeAllTracksForChildren()
       self.serverSocket.emit('[webrtc]offer-new-sons')
-      // self.childPeers.forEach((peer, uuid) => self.sendOffer(uuid, peer))
     }
   }
 
@@ -160,10 +165,10 @@ const onSendOffer = async function (from, offer, self) {
 }
 
 /**
- * Initializes the socket.io event handlers for the s
+ * Initializes the socket.io event handlers for the current session.
  */
 RTCForwardingPeer.prototype.initializeEventHandlers = function () {
-  // 'this' is going to be changed in the callback
+  /* The 'this' reference is going to be changed in the callback */
   const self = this
   this.serverSocket.on('connect', function () {
     self.connectionState = 'connected'
@@ -198,22 +203,12 @@ RTCForwardingPeer.prototype.initializeEventHandlers = function () {
 /**
  * Connects the peer to a room
  * @param {string} room
- * // TODO maybe change to a more complex type
  * @returns {Promise<string | Error>}
  */
-RTCForwardingPeer.prototype.joinRoom = async function (room) {
-  // TODO separate event handlers in a different function
+RTCForwardingPeer.prototype.joinRoom = async function (room, props) {
   const self = this
   return new Promise(function (resolve, reject) {
-    getAverageDownloadSpeed().then(speed => {
-      log('download speed: ' + speed + (speed > 4 ? '(FAST)' : '(tortoise)'))
-      const props = { downloadSpeed: speed }
-      self.serverSocket.emit('[request]rtc:room:join', room, props)
-    })
-      .catch(e => {
-        const props = { downloadSpeed: Math.random() * 1000 }
-        self.serverSocket.emit('[request]rtc:room:join', room, props)
-      })
+    self.serverSocket.emit('[request]rtc:room:join', room, props)
 
     self.serverSocket.on('[response]rtc:joining-as-broadcaster', function () {
       self.isBroadcaster = true
@@ -221,7 +216,6 @@ RTCForwardingPeer.prototype.joinRoom = async function (room) {
     })
 
     self.serverSocket.on('[response]rtc:joining-as-viewer', function () {
-      // FIXME refactor code
       self.serverSocket.on(
         '[webrtc]send-offer', (from, offer) => onSendOffer(from, offer, self))
 
@@ -242,6 +236,9 @@ RTCForwardingPeer.prototype.removeAllTracksForChildren = function () {
   })
 }
 
+/**
+ * Closes the current connection to the peers and the server.
+ */
 RTCForwardingPeer.prototype.close = function () {
   this.serverSocket.close()
   this.parentPeer.close()
@@ -257,11 +254,12 @@ RTCForwardingPeer.prototype.close = function () {
   })
 }
 
+/**
+ * Cancels all event handlers, especially when closing the connection.
+ */
 RTCForwardingPeer.prototype.removeAllListeners = function () {
   // TODO add more event handlers if needed
   this.onConnectionStateChange = undefined
-  this.onParentStateChange = undefined
-  this.onChildStateChange = undefined
   this.onTrack = undefined
 }
 
@@ -280,8 +278,8 @@ RTCForwardingPeer.prototype.addStream = function (stream) {
   this.stream = stream
   this.childPeers.forEach((peer, uuid) => {
     stream.getTracks().forEach(track => peer.addTrack(track))
-    // 'onnegotiationneeded' event does not fit our needs to replace
-    // the whole stream
+    /* The 'onnegotiationneeded' event does not fit our needs to replace the
+     * whole stream */
     this.sendOffer(uuid, peer)
   })
 }
