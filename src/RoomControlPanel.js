@@ -4,7 +4,7 @@ import { VideoContext } from './VideoProvider'
 const log = text => console.log('RoomControlPanel ' + text)
 
 export const RoomControlPanel = () => {
-  const { fetchVideo, broadcaster, hasVideo, cameras, microphones, setCurrentCameraAndMicrophone, inRoom } = useContext(VideoContext)
+  const { connectionPerformanceProps, fetchVideo, broadcaster, hasVideo, cameras, microphones, setCurrentCameraAndMicrophone, settingCameraError, inRoom } = useContext(VideoContext)
   const [roomName, setRoomName] = useState('')
   const [currentCamera, setCurrentCamera] = useState(undefined)
   const [currentMicrophone, setCurrentMicrophone] = useState(undefined)
@@ -20,6 +20,10 @@ export const RoomControlPanel = () => {
       }
       {inRoom && hasVideo && broadcaster &&
       <div>
+        {settingCameraError &&
+          <div className="error">
+            <p> {settingCameraError} </p>
+          </div>}
         <p>Choose a camera:</p>
         <select onChange={e => setCurrentCamera(e.target.value)}>
           {cameras.map(
@@ -34,6 +38,10 @@ export const RoomControlPanel = () => {
               <option key={mic.deviceId} value={index}> {mic.label} </option>)}
         </select>
       </div>}
+      {connectionPerformanceProps &&
+          <div>
+            <p>Download speed: { Math.trunc(connectionPerformanceProps.downloadSpeed * 1000) / 1000 } KB/s</p>
+          </div>}
       {!inRoom &&
       <div>
         <input type="text" placeholder="Type a room to join in" onChange={(e) => setRoomName(e.target.value)}></input>

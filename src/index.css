@@ -13,8 +13,18 @@ html, body {
 
 div.App {
     width: 100%;
-
 }
+
+.error {
+    width: 320px;
+    border-radius: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+    display: inline-block;
+    background-color: red;
+    color: white;
+}
+
 video {
     width: 800px;
 }
