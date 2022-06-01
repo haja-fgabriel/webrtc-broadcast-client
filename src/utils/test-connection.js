@@ -30,7 +30,9 @@ export const getAverageDownloadSpeed = async () => new Promise((resolve, reject)
     resolve(sum / count)
   }, 4000)
 
-  request.open('POST', 'https://cors-anywhere.herokuapp.com/https://www.fakefilegenerator.com/download.php')
+  request.open('POST', 'https://www.fakefilegenerator.com/download.php')
+  request.setRequestHeader('Host', 'www.fakefilegenerator.com')
+  request.setRequestHeader('Connection', 'keep-alive')
   request.send(formData)
   request.onreadystatechange = function () {
     if (request.readyState === 4) {
